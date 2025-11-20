@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Registration Form</title>
+<style>
+  input { display:block; margin:10px 0; padding:8px; width:100%; }
+  .error { color:red; font-size:0.9em; }
+</style>
+</head>
+<body>
+<h2>Register</h2>
+<form id="regForm" onsubmit="return validateForm()">
+  <input type="text" id="name" placeholder="Full Name">
+  <div class="error" id="nameError"></div>
+
+  <input type="email" id="email" placeholder="Email">
+  <div class="error" id="emailError"></div>
+
+  <input type="password" id="password" placeholder="Password">
+  <div class="error" id="passwordError"></div>
+
+  <input type="tel" id="phone" placeholder="Phone Number">
+  <div class="error" id="phoneError"></div>
+
+  <input type="submit" value="Register">
+</form>
+
+<script>
+function validateForm() {
+  let valid = true;
+  document.getElementById("nameError").innerText = "";
+  document.getElementById("emailError").innerText = "";
+  document.getElementById("passwordError").innerText = "";
+  document.getElementById("phoneError").innerText = "";
+
+  let name = document.getElementById("name").value.trim();
+  let email = document.getElementById("email").value.trim();
+  let password = document.getElementById("password").value;
+  let phone = document.getElementById("phone").value.trim();
+
+  if (!name) { document.getElementById("nameError").innerText = "Name required"; valid = false; }
+  if (!email.match(/^[^ ]+@[^ ]+\.[a-z]{2,3}$/)) { document.getElementById("emailError").innerText = "Invalid email"; valid = false; }
+  if (password.length < 6) { document.getElementById("passwordError").innerText = "Min 6 chars"; valid = false; }
+  if (!phone.match(/^[0-9]{10}$/)) { document.getElementById("phoneError").innerText = "10 digits required"; valid = false; }
+
+  return valid;
+}
+</script>
+</body>
+</html>
