@@ -1,0 +1,73 @@
+import pandas as pd
+import numpy as np
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report
+import datetime
+
+# Step 1: Generate Fake Sensor Data - Simulate 100 houses for 30 days
+def generate_data():
+    np.random.seed(42)
+    data = []
+    for house_id in range(1, 101):
+        for day in range(30):
+            # Normal usage: 200-400 liters/day
+            usage = np.random.normal(300, 50)
+            
+            # Inject 10 leaks randomly
+            is_leak = 0
+            if house_id in [12, 25, 48, 77] and day > 20:
+                usage = usage + np.random.normal(400, 100) # Spike
+                is_leak = 1
+
+            data.append([house_id, day, usage, is_leak])
+    
+    df = pd.DataFrame(data, columns=["house_id", "day", "water_usage_liters", "is_leak"])
+    return df
+
+# Step 2: Train AI Model with Vertex AI style workflow
+def train_model(df):
+    X = df[["water_usage_liters", "day"]]
+    y = df["is_leak"]
+    
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    
+    # This represents Vertex AI + NVIDIA GPU training
+    model = RandomForestClassifier(n_estimators=100, random_state=42)
+    model.fit(X_train, y_train)
+    
+    # Evaluate
+    y_pred = model.predict(X_test)
+    print("=== MODEL PERFORMANCE ===")
+    print(classification_report(y_test, y_pred))
+    
+    return model
+
+# Step 3: AI Agent using ADK + Gemini Logic
+def ai_agent_alert(model, new_data):
+    prediction = model.predict(new_data[["water_usage_liters", "day"]])
+    new_data["predicted_leak"] = prediction
+    
+    leaks = new_data[new_data["predicted_leak"] == 1]
+    
+    print("\n=== AI AGENT ACTIONS ===")
+    if leaks.empty:
+        print("No leaks detected today. Community is good.")
+    else:
+        for _, row in leaks.iterrows():
+            message = f"ALERT: Hi House {int(row['house_id'])}, unusual water usage of {row['water_usage_liters']:.0f}L detected. Possible leak. Tap to book plumber."
+            print(f"[WHATSAPP SENT] {message}")
+
+if __name__ == "__main__":
+    print("Step 1: Loading data from BigQuery...")
+    df = generate_data()
+    
+    print("Step 2: Training model on Vertex AI + NVIDIA GPU...")
+    model = train_model(df)
+    
+    print("\nStep 3: Running prediction for 'Today' - Day 29")
+    today_data = df[df["day"] == 29].copy()
+    ai_agent_alert(model, today_data)
+    
+    print("\n=== DEPLOYMENT NOTE ===")
+    print("This model can be deployed on Vertex AI Endpoint for real-time predictions.")
